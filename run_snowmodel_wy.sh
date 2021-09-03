@@ -38,7 +38,6 @@ cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/update_par_file
 cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/wy_snowmodel/
 ./snowmodel
 
-
 ################################
 # tons of file management coming your way...
 smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/wy_snowmodel/"
