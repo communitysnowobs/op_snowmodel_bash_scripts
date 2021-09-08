@@ -1,0 +1,4 @@
+0 16 * * * /nfs/depot/cce_u1/hill/dfh/github/SNODAS/snodas_daily_update.sh 2>&1 | /bin/mailx -E -s "snodas_daily_update" dfh@engr.oregonstate.edu
+0 11 * * * /nfs/depot/cce_u1/hill/dfh/op_snowmodel/op_snowmodel_bash_scripts/run_snowmodel_wy.sh
+0 12 * * * /nfs/depot/cce_u1/hill/dfh/op_snowmodel/op_snowmodel_bash_scripts/run_snowmodel_or.sh
+#0 11 * * * /nfs/depot/cce_u1/hill/dfh/op_snowmodel/op_snowmodel_bash_scripts/run_snowmodel_ca.sh

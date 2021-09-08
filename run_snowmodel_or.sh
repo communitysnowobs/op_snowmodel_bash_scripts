@@ -34,13 +34,14 @@ cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/update_par_file
 ./makeparfile_or.exe
 
 ################################
-#kick of snow model run for wy domain
+#kick of snow model run for or domain
 cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/or_snowmodel/
 ./snowmodel
 
 ################################
 # tons of file management coming your way...
 smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/or_snowmodel/"
+outpath="/scratch/op_snowmodel_outputs/OR/"
 #convert swe and Hs grads output to .nc
 /scratch/cdo/bin/cdo -f nc import_binary "${smpath}ctl_files/wo_assim/swed.ctl" "${smpath}ctl_files/wo_assim/swed.nc"
 /scratch/cdo/bin/cdo -f nc import_binary "${smpath}ctl_files/wo_assim/snod.ctl" "${smpath}ctl_files/wo_assim/snod.nc"
@@ -193,6 +194,10 @@ mv $fout $fin
 rm -f $fout
 gsutil cp $fin gs://cso_test_upload/or_domain/swed_wo_assim/
 
+#let's move it to /scratch and get it off of depot
+fout="${outpath}${STAMP}_swed_wo_assim.tif"
+mv $fin $fout
+
 fin="${smpath}ctl_files/wo_assim/${STAMP}_mask_snod_wo_assim.tif"
 fout="${smpath}ctl_files/wo_assim/${STAMP}_mask_cog_snod_wo_assim.tif"
 gdal_translate $fin $fout -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=DEFLATE
@@ -201,3 +206,7 @@ fin="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.tif"
 mv $fout $fin
 rm -f $fout
 gsutil cp $fin gs://cso_test_upload/or_domain/snod_wo_assim/
+
+#let's move it to /scratch and get it off of depot
+fout="${outpath}${STAMP}_snod_wo_assim.tif"
+mv $fin $fout
