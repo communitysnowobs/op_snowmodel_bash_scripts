@@ -4,16 +4,10 @@
 #the daily grids in my Google Cloud Storage (say you recalibrated the model, e.g.).
 #same for snod.nc
 
-#reset time axis to start 1 Oct of present water year
-#get today's date info and figure out year of current water year
-day=$(date '+%d')
-month=$(date '+%b')
-monthnum=$(date '+%m')
-year=$(date '+%Y')
-if [ $((10#$monthnum)) -lt 10 ]
-then
-	year=$(($year - 1))
-fi
+#have user set year, month, day of the start of the model run (typically Oct 1 of a given year)
+year=2020
+month=10
+day=01
 
 #define main path
 smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/or_snowmodel/"
@@ -21,15 +15,18 @@ smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/or_snowmodel/"
 outpath="/scratch/op_snowmodel_outputs/OR/"
 
 #use cdo to reset time axis
-/scratch/cdo/bin/cdo settaxis,$year-10-01,00:00:00,1days "${smpath}ctl_files/wo_assim/swed.nc" "${smpath}ctl_files/wo_assim/swed2.nc"
-/scratch/cdo/bin/cdo settaxis,$year-10-01,00:00:00,1days "${smpath}ctl_files/wo_assim/snod.nc" "${smpath}ctl_files/wo_assim/snod2.nc"
+/scratch/cdo/bin/cdo settaxis,$year-$month-$day,00:00:00,1days \
+    "${smpath}ctl_files/wo_assim/swed.nc" "${smpath}ctl_files/wo_assim/swed2.nc"
+/scratch/cdo/bin/cdo settaxis,$year-$month-$day,00:00:00,1days \
+    "${smpath}ctl_files/wo_assim/snod.nc" "${smpath}ctl_files/wo_assim/snod2.nc"
 
 #next, we are going to mess with the .nc metadata. CDO treats files as lon / lat, whereas
 #we have projected coords out of SnowModel.
 #DO SWED FIRST
 infile1="${smpath}ctl_files/wo_assim/swed2.nc"
 outfile1="${smpath}ctl_files/wo_assim/swed3.nc"
-ncrename -O -v .lat,projection_y_coordinate -d .lat,projection_y_coordinate -v .lon,projection_x_coordinate -d .lon,projection_x_coordinate "${infile1}" "${outfile1}"
+ncrename -O -v .lat,projection_y_coordinate -d .lat,projection_y_coordinate -v \
+    .lon,projection_x_coordinate -d .lon,projection_x_coordinate "${infile1}" "${outfile1}"
 
 #Next, change attributes
 ncatted -O -a long_name,projection_y_coordinate,o,c,y "${outfile1}"
@@ -103,41 +100,24 @@ ncatted -O -a units,projection_x_coordinate,o,c,kilometers "${outfile2}"
 fi
 
 #cool, so our entire water year of SWED is now converted over properly to .nc. 
-#Let us now extract just the final day and rename it appropriately. First, figure out
-#number of time steps in the file.
+#Next, figure out the number of time steps in the file.
 numsteps=$(/scratch/cdo/bin/cdo -ntime "${outfile2}")
-#add 3 due to latency of cfs2 data.
-num=$(($numsteps+3))
-echo "$num"
-#get date string from three days ago
-STAMP=$(date --date="${num} days ago" +"%Y%b%d")
-echo "$STAMP"
 
-d=$(date --date="${num} days ago" '+%d')
-echo "$d"
-m=$(date --date="${num} days ago" '+%m')
-echo "$m"
-y=$(date --date="${num} days ago" '+%Y')
-echo "$y"
-
+#mkdir to store the individual time slices.
 mkdir -p "${smpath}ctl_files/wo_assim/SWE"
 mkdir -p "${smpath}ctl_files/wo_assim/HS"
 
-
-for ((i=1; i<= $numsteps; i++));
+for ((i=0; i<= $numsteps-1; i++));
 do
-  counter=$(($numsteps+3+1-$i))
-  echo "$counter"
-  d=$(date --date="${counter} days ago" '+%d')
-  m=$(date --date="${counter} days ago" '+%m')
-  y=$(date --date="${counter} days ago" '+%Y')
-  stamp="${y}_${m}_${d}"
-  echo "$stamp"
-  singledayswe="${smpath}ctl_files/wo_assim/SWE/$stamp.nc"
-  singledayhs="${smpath}ctl_files/wo_assim/HS/$stamp.nc"
-  /scratch/cdo/bin/cdo -seltimestep,$i $outfile1 $singledayswe
-  /scratch/cdo/bin/cdo -seltimestep,$i $outfile2 $singledayhs
-  
+d=$(date -d "${year}-${month}-${day} +${i} days" '+%d')
+m=$(date -d "${year}-${month}-${day} +${i} days" '+%m')
+y=$(date -d "${year}-${month}-${day} +${i} days" '+%Y')
+stamp="${y}_${m}_${d}"
+singledayswe="${smpath}ctl_files/wo_assim/SWE/$stamp.nc"
+singledayhs="${smpath}ctl_files/wo_assim/HS/$stamp.nc"
+/scratch/cdo/bin/cdo -seltimestep,${i+1} $outfile1 $singledayswe
+/scratch/cdo/bin/cdo -seltimestep,${i+1} $outfile2 $singledayhs
+   
 #next, we want to convert this .nc to a geotiff. We can do this with gdal. The synatx:
 #>>gdal_translate -of GTiff -a_srs EPSG:xxxx file.nc file.tif
 #the -of GTiff requests tiff as output format. The -a_srs EPSG:xxxx sets the projection
@@ -194,4 +174,3 @@ done
   rm "${infile1}"
   rm "${outfile2}"
   rm "${infile2}"
-
