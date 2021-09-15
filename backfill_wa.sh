@@ -1,5 +1,5 @@
 #! /bin/bash
-#to backfill OR domain for WY 2021...to use this, you need to have a swed.nc file
+#to backfill wa_sq domain for WY 2021...to use this, you need to have a swed.nc file
 #from a snowmodel run (say, from the operational run). You would use this script if you wanted to replace
 #the daily grids in my Google Cloud Storage (say you recalibrated the model, e.g.).
 #same for snod.nc
@@ -10,9 +10,9 @@ month=10
 day=01
 
 #define main path
-smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/ut_snowmodel/"
+smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/wa_ne_snowmodel/"
 #define output path on scratch
-outpath="/scratch/op_snowmodel_outputs/UT/"
+outpath="/scratch/op_snowmodel_outputs/WA/"
 
 #use cdo to reset time axis
 /scratch/cdo/bin/cdo settaxis,$year-$month-$day,00:00:00,1days \
@@ -127,12 +127,12 @@ echo $j
 #the -a_ullr fixes a slight grid offset.
 fin="${smpath}ctl_files/wo_assim/SWE/$stamp.nc"
 fout="${smpath}ctl_files/wo_assim/SWE/$stamp.tif"
-gdal_translate -of GTiff -a_srs EPSG:32612 -a_ullr 432255 4507095 461055 4476735 $fin $fout
+gdal_translate -of GTiff -a_srs EPSG:32610 -a_ullr 638925 5421375 741525 5299075 $fin $fout
 rm -f $fin
 
 fin="${smpath}ctl_files/wo_assim/HS/$stamp.nc"
 fout="${smpath}ctl_files/wo_assim/HS/$stamp.tif"
-gdal_translate -of GTiff -a_srs EPSG:32612 -a_ullr 432255 4507095 461055 4476735 $fin $fout
+gdal_translate -of GTiff -a_srs EPSG:32610 -a_ullr 638925 5421375 741525 5299075 $fin $fout
 rm -f $fin
 
 #next, let's set values of zero swe to be 'nodata' values. In this way, when we plot the
@@ -156,7 +156,7 @@ fin="${smpath}ctl_files/wo_assim/SWE/${stamp}_mask.tif"
 fout="${smpath}ctl_files/wo_assim/SWE/${stamp}_swed_wo_assim.tif"
 gdal_translate $fin $fout -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=DEFLATE
 rm -f $fin
-gsutil cp $fout gs://cso_test_upload/ut_domain/swed_wo_assim/
+gsutil cp $fout gs://cso_test_upload/wa_domain/swed_wo_assim/
 
 #let's move it to /scratch and get it off of depot
 mv $fout "${outpath}${stamp}_swed_wo_assim.tif"
@@ -165,15 +165,15 @@ fin="${smpath}ctl_files/wo_assim/HS/${stamp}_mask.tif"
 fout="${smpath}ctl_files/wo_assim/HS/${stamp}_snod_wo_assim.tif"
 gdal_translate $fin $fout -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=DEFLATE
 rm -f $fin
-gsutil cp $fout gs://cso_test_upload/ut_domain/snod_wo_assim/
+gsutil cp $fout gs://cso_test_upload/wa_domain/snod_wo_assim/
 
 #let's move it to /scratch and get it off of depot
 mv $fout "${outpath}${stamp}_snod_wo_assim.tif"
 
 done
 
-  #clean up a bit
-  rm "${outfile1}"
-  rm "${infile1}"
-  rm "${outfile2}"
-  rm "${infile2}"
+#clean up a bit
+rm "${outfile1}"
+rm "${infile1}"
+rm "${outfile2}"
+rm "${infile2}"
