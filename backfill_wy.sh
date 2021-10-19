@@ -5,7 +5,7 @@
 #same for snod.nc
 
 #have user set year, month, day of the start of the model run (typically Oct 1 of a given year)
-year=2020
+year=2021
 month=10
 day=01
 

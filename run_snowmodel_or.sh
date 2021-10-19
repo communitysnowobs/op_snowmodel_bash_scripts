@@ -12,6 +12,12 @@ year=$(date '+%Y')
 if [ $((10#$monthnum)) -lt 10 ]
 then
 	year=$(($year - 1))
+elif [ $((10#$monthnum)) -eq 10 ]	
+then
+if [ $day -lt 4 ]
+then
+    year=$(($year - 1))
+fi
 fi
 
 #also, we are ultimately going to extract just the 'last' time slice, so let's figure

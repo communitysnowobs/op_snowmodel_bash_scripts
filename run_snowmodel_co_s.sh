@@ -1,10 +1,10 @@
 #! /bin/bash
-#This runs the operational snowmodel for CA domain
+
 #Note, we need to do a number of things that are related to the date of the model run.
 #this includes a reset the time axis to start 1 Oct of present water year. Get today's
 #date info and figure out year of current water year. Let's do that up front in
 #this script. We do this since the model run takes a long time (12+ hours) and may
-#conclude TOMORROW and not today. We want today's date. 
+#conclude TOMORROW and not today. We want today's date.
 day=$(date '+%d')
 month=$(date '+%b')
 monthnum=$(date '+%m')
@@ -31,23 +31,23 @@ STAMP="${y}_${m}_${d}"
 #run the query for met
 cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/get_met_data
 source /nfs/attic/dfh/miniconda/bin/activate ee
-ipython met_data_ca.py
+ipython met_data_co_s.py
 conda deactivate
 
 ################################
 #adjust the par file
 cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/update_par_file
-./makeparfile_ca.exe
+./makeparfile_co_s.exe
 
 ################################
-#kick of snow model run for ca domain
-cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/ca_snowmodel/
+#kick of snow model run for co_n domain
+cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/co_s_snowmodel/
 ./snowmodel
 
 ################################
 # tons of file management coming your way...
-smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/ca_snowmodel/"
-outpath="/scratch/op_snowmodel_outputs/CA/"
+smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/co_s_snowmodel/"
+outpath="/scratch/op_snowmodel_outputs/CO_S/"
 #convert swe and Hs grads output to .nc
 /scratch/cdo/bin/cdo -f nc import_binary "${smpath}ctl_files/wo_assim/swed.ctl" "${smpath}ctl_files/wo_assim/swed.nc"
 /scratch/cdo/bin/cdo -f nc import_binary "${smpath}ctl_files/wo_assim/snod.ctl" "${smpath}ctl_files/wo_assim/snod.nc"
@@ -161,13 +161,13 @@ rm "${infile2}"
 #the -a_ullr fixes the weird 'shift' issue we have been having!
 fin="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.nc"
 fout="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.tif"
-gdal_translate -of GTiff -a_srs EPSG:32611 -a_ullr 163725 4401325 271925 4253225 $fin $fout
+gdal_translate -of GTiff -a_srs EPSG:32613 -a_ullr 224550 4214650 371550 4129550 $fin $fout
 #clean up
 rm "${fin}"
 
 fin="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.nc"
 fout="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.tif"
-gdal_translate -of GTiff -a_srs EPSG:32611 -a_ullr 163725 4401325 271925 4253225 $fin $fout
+gdal_translate -of GTiff -a_srs EPSG:32613 -a_ullr 224550 4214650 371550 4129550 $fin $fout
 #clean up
 rm "${fin}"
 
@@ -198,7 +198,7 @@ rm -f $fin
 fin="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.tif"
 mv $fout $fin
 rm -f $fout
-gsutil cp $fin gs://cso_test_upload/ca_domain/swed_wo_assim/
+gsutil cp $fin gs://cso_test_upload/co_s_domain/swed_wo_assim/
 
 #let's move it to /scratch and get it off of depot
 fout="${outpath}${STAMP}_swed_wo_assim.tif"
@@ -211,8 +211,9 @@ rm -f $fin
 fin="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.tif"
 mv $fout $fin
 rm -f $fout
-gsutil cp $fin gs://cso_test_upload/ca_domain/snod_wo_assim/
+gsutil cp $fin gs://cso_test_upload/co_s_domain/snod_wo_assim/
 
 #let's move it to /scratch and get it off of depot
 fout="${outpath}${STAMP}_snod_wo_assim.tif"
 mv $fin $fout
+
