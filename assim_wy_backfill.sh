@@ -1,49 +1,33 @@
 #! /bin/bash
+#this will test out the full operational flow for WY for assim...
 
-#This script will execute the complete assimilative snowmodel run for the central OR
-#domain. See inline comments for further explanation. This version of the code does a 
-#complete run from Oct 1 of current water year to today - (3days). Only the last time
-#slice is extracted, saved, and uploaded.
+#have user set year, month, day of the start of the model run (typically Oct 1 of a given year)
+year=2020
+month=10
+day=01
 
-#Note, we need to do a number of things that are related to the date of the model run.
-#this includes a reset the time axis to start 1 Oct of present water year. Get today's
-#date info and figure out year of current water year. Let's do that up front in
-#this script. We do this since the model run takes a long time (12+ hours) and may
-#conclude TOMORROW and not today. We want today's date.
-day=$(date '+%d')
-month=$(date '+%b')
-monthnum=$(date '+%m')
-year=$(date '+%Y')
-if [ $((10#$monthnum)) -lt 10 ]
-then
-	year=$(($year - 1))
-elif [ $((10#$monthnum)) -eq 10 ]	
-then
-if [ $day -lt 4 ]
-then
-    year=$(($year - 1))
-fi
-fi
+#define main path
+smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/wy_snowmodel/"
+#define output path on scratch
+outpath="/scratch/op_snowmodel_outputs/WY/"
 
-#also, we are ultimately going to extract just the 'last' time slice, so let's figure
-#out the time stamp for that. Get date string from three days ago
-d=$(date --date="3 days ago" '+%d')
-m=$(date --date="3 days ago" '+%m')
-y=$(date --date="3 days ago" '+%Y')
-STAMP="${y}_${m}_${d}"
+#end of model run
+#d=30
+#m=9
+#y=2021
 
 ################################
-#run the query for met data
+#run the query for met --> adjust this python script to manual dates!
 cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/op_snowmodel_python_scripts
 source /nfs/attic/dfh/miniconda/bin/activate ee
-ipython met_data_or.py
+ipython met_data_backfill_wy.py
 conda deactivate
 
 ################################
-#run assim snowmodel...(review that script closely for details, there is a lot going on)
+#run assim snowmodel... --> adjust to manual dates.
 cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/op_snowmodel_python_scripts
 source /nfs/attic/dfh/miniconda/bin/activate snowmodelcal
-ipython assim_or.py
+ipython assim_backfill_wy.py
 conda deactivate
 
 echo
@@ -54,9 +38,9 @@ echo
 #time to clean up a bit...delete ssmt and sspr grads files, both in 
 #the wo_assim and the wi_assim folders. We just don't need them. 
 
-smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/or_snowmodel/"
+smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/wy_snowmodel/"
 #define output path on scratch
-outpath="/scratch/op_snowmodel_outputs/OR/"
+outpath="/scratch/op_snowmodel_outputs/WY/"
 
 rm "${smpath}outputs/wi_assim/ssmt.gdat"
 rm "${smpath}outputs/wi_assim/sspr.gdat"
@@ -82,10 +66,10 @@ rm "${smpath}outputs/wo_assim/swed.gdat"
 rm "${smpath}outputs/wo_assim/snod.gdat"
 
 #use cdo to reset the time axis.
-/scratch/cdo/bin/cdo settaxis,$year-10-01,00:00:00,1days "${smpath}ctl_files/wo_assim/swed.nc" "${smpath}ctl_files/wo_assim/swed2.nc"
-/scratch/cdo/bin/cdo settaxis,$year-10-01,00:00:00,1days "${smpath}ctl_files/wi_assim/swed.nc" "${smpath}ctl_files/wi_assim/swed2.nc"
-/scratch/cdo/bin/cdo settaxis,$year-10-01,00:00:00,1days "${smpath}ctl_files/wo_assim/snod.nc" "${smpath}ctl_files/wo_assim/snod2.nc"
-/scratch/cdo/bin/cdo settaxis,$year-10-01,00:00:00,1days "${smpath}ctl_files/wi_assim/snod.nc" "${smpath}ctl_files/wi_assim/snod2.nc"
+/scratch/cdo/bin/cdo settaxis,$year-$month-$day,00:00:00,1days "${smpath}ctl_files/wo_assim/swed.nc" "${smpath}ctl_files/wo_assim/swed2.nc"
+/scratch/cdo/bin/cdo settaxis,$year-$month-$day,00:00:00,1days "${smpath}ctl_files/wi_assim/swed.nc" "${smpath}ctl_files/wi_assim/swed2.nc"
+/scratch/cdo/bin/cdo settaxis,$year-$month-$day,00:00:00,1days "${smpath}ctl_files/wo_assim/snod.nc" "${smpath}ctl_files/wo_assim/snod2.nc"
+/scratch/cdo/bin/cdo settaxis,$year-$month-$day,00:00:00,1days "${smpath}ctl_files/wi_assim/snod.nc" "${smpath}ctl_files/wi_assim/snod2.nc"
 
 echo
 echo " done resetting time axis"
@@ -249,98 +233,95 @@ echo "done editing metadata"
 echo
 
 ################################
-#cool, so our entire water year of SWED and SNOD is now converted over properly to .nc. 
-#Let us now extract just the final day and rename it appropriately. First, figure out
-#number of time steps in the file.
+#great, so our grids are all now properly converted to nc format. Next, let us figure
+#out how many time steps in the file(s).
 numsteps=$(/scratch/cdo/bin/cdo -ntime "${outfile4}")
 echo $numsteps
 
-#do swed wo_assim
-singleday="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.nc"
-/scratch/cdo/bin/cdo -seltimestep,$numsteps $outfile1 $singleday
+#mkdir to store the individual time slices.
+mkdir -p "${smpath}ctl_files/wo_assim/SWE"
+mkdir -p "${smpath}ctl_files/wo_assim/HS"
+mkdir -p "${smpath}ctl_files/wi_assim/SWE"
+mkdir -p "${smpath}ctl_files/wi_assim/HS"
 
-#do swed wi_assim
-singleday="${smpath}ctl_files/wi_assim/${STAMP}_swed_wi_assim.nc"
-/scratch/cdo/bin/cdo -seltimestep,$numsteps $outfile2 $singleday
+#start a loop to deal with each day.
 
-#do snod wo_assim
-singleday="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.nc"
-/scratch/cdo/bin/cdo -seltimestep,$numsteps $outfile3 $singleday
+for ((i=0; i<= $numsteps-1; i++));
+do
+d=$(date -d "${year}-${month}-${day} +${i} days" '+%d')
+m=$(date -d "${year}-${month}-${day} +${i} days" '+%m')
+y=$(date -d "${year}-${month}-${day} +${i} days" '+%Y')
+stamp="${y}_${m}_${d}"
 
-#do snod wi_assim
-singleday="${smpath}ctl_files/wi_assim/${STAMP}_snod_wi_assim.nc"
-/scratch/cdo/bin/cdo -seltimestep,$numsteps $outfile4 $singleday
+echo
+echo $stamp
+j=$(($i+1))
+echo $j
 
-#clean up a bit
-rm "${outfile1}"
-rm "${infile1}"
-rm "${outfile2}"
-rm "${infile2}"
-rm "${outfile3}"
-rm "${infile3}"
-rm "${outfile4}"
-rm "${infile4}"
+#pull out individual day .nc files.
+singleday="${smpath}ctl_files/wo_assim/SWE/$stamp.nc"
+/scratch/cdo/bin/cdo -seltimestep,$j $outfile1 $singleday
+
+singleday="${smpath}ctl_files/wo_assim/HS/$stamp.nc"
+/scratch/cdo/bin/cdo -seltimestep,$j $outfile3 $singleday
+
+singleday="${smpath}ctl_files/wi_assim/SWE/$stamp.nc"
+/scratch/cdo/bin/cdo -seltimestep,$j $outfile2 $singleday
+
+singleday="${smpath}ctl_files/wi_assim/HS/$stamp.nc"
+/scratch/cdo/bin/cdo -seltimestep,$j $outfile4 $singleday
+
 
 ################################
 #next, we want to convert this .nc to a geotiff. We can do this with gdal. The synatx:
 #>>gdal_translate -of GTiff -a_srs EPSG:xxxx file.nc file.tif
 #the -of GTiff requests tiff as output format. The -a_srs EPSG:xxxx sets the projection
 #the -a_ullr fixes the weird 'shift' issue we have been having!
-fin="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.nc"
-fout="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 570350 4955850 652450 4832750 $fin $fout
-#clean up
-rm "${fin}"
+fin="${smpath}ctl_files/wo_assim/SWE/$stamp.nc"
+fout="${smpath}ctl_files/wo_assim/SWE/$stamp.tif"
+gdal_translate -q -of GTiff -a_srs EPSG:32612 -a_ullr 487150 4937650 625350 4690050 $fin $fout
+rm -f $fin
 
-fin="${smpath}ctl_files/wi_assim/${STAMP}_swed_wi_assim.nc"
-fout="${smpath}ctl_files/wi_assim/${STAMP}_swed_wi_assim.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 570350 4955850 652450 4832750 $fin $fout
-#clean up
-rm "${fin}"
+fin="${smpath}ctl_files/wo_assim/HS/$stamp.nc"
+fout="${smpath}ctl_files/wo_assim/HS/$stamp.tif"
+gdal_translate -q -of GTiff -a_srs EPSG:32612 -a_ullr 487150 4937650 625350 4690050 $fin $fout
+rm -f $fin
 
-fin="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.nc"
-fout="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 570350 4955850 652450 4832750 $fin $fout
-#clean up
-rm "${fin}"
+fin="${smpath}ctl_files/wi_assim/SWE/$stamp.nc"
+fout="${smpath}ctl_files/wi_assim/SWE/$stamp.tif"
+gdal_translate -q -of GTiff -a_srs EPSG:32612 -a_ullr 487150 4937650 625350 4690050 $fin $fout
+rm -f $fin
 
-fin="${smpath}ctl_files/wi_assim/${STAMP}_snod_wi_assim.nc"
-fout="${smpath}ctl_files/wi_assim/${STAMP}_snod_wi_assim.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 570350 4955850 652450 4832750 $fin $fout
-#clean up
-rm "${fin}"
-
-echo
-echo "done converting to geotiff"
-echo
+fin="${smpath}ctl_files/wi_assim/HS/$stamp.nc"
+fout="${smpath}ctl_files/wi_assim/HS/$stamp.tif"
+gdal_translate -q -of GTiff -a_srs EPSG:32612 -a_ullr 487150 4937650 625350 4690050 $fin $fout
+rm -f $fin
 
 ################################
-#next, let's set values of swe less than 0.001 m to be 'nodata' values. In this way, 
-#when we plot the tif, those cells will be transparent. I tested this in QGIS and they do show up 
+#next, let's set values of zero to be 'nodata' values. In this way, when we plot the
+#tif, those cells will be transparent. I tested this in QGIS and they do show up 
 #transparent. Need to deactivate conda and then reactivate it, in order to access
-#gdal_calc. Do same for hs less than 0.01 m
+#gdal_calc
 source /nfs/attic/dfh/miniconda/bin/activate cso
-fin="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.tif"
-fout="${smpath}ctl_files/wo_assim/${STAMP}_mask_swed_wo_assim.tif"
+fin="${smpath}ctl_files/wo_assim/SWE/$stamp.tif"
+fout="${smpath}ctl_files/wo_assim/SWE/${stamp}_mask.tif"
 python /nfs/attic/dfh/miniconda/envs/cso/bin/gdal_calc.py -A $fin --outfile=$fout --calc="A*(A>0.001)" --NoDataValue=0 --quiet
-#clean up
-rm "${fin}"
+rm -f $fin
 
-fin="${smpath}ctl_files/wi_assim/${STAMP}_swed_wi_assim.tif"
-fout="${smpath}ctl_files/wi_assim/${STAMP}_mask_swed_wi_assim.tif"
+fin="${smpath}ctl_files/wo_assim/HS/$stamp.tif"
+fout="${smpath}ctl_files/wo_assim/HS/${stamp}_mask.tif"
+python /nfs/attic/dfh/miniconda/envs/cso/bin/gdal_calc.py -A $fin --outfile=$fout --calc="A*(A>0.01)" --NoDataValue=0 --quiet
+rm -f $fin
+
+fin="${smpath}ctl_files/wi_assim/SWE/$stamp.tif"
+fout="${smpath}ctl_files/wi_assim/SWE/${stamp}_mask.tif"
 python /nfs/attic/dfh/miniconda/envs/cso/bin/gdal_calc.py -A $fin --outfile=$fout --calc="A*(A>0.001)" --NoDataValue=0 --quiet
-#clean up
-rm "${fin}"
+rm -f $fin
 
-fin="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.tif"
-fout="${smpath}ctl_files/wo_assim/${STAMP}_mask_snod_wo_assim.tif"
+fin="${smpath}ctl_files/wi_assim/HS/$stamp.tif"
+fout="${smpath}ctl_files/wi_assim/HS/${stamp}_mask.tif"
 python /nfs/attic/dfh/miniconda/envs/cso/bin/gdal_calc.py -A $fin --outfile=$fout --calc="A*(A>0.01)" --NoDataValue=0 --quiet
-rm "${fin}"
-
-fin="${smpath}ctl_files/wi_assim/${STAMP}_snod_wi_assim.tif"
-fout="${smpath}ctl_files/wi_assim/${STAMP}_mask_snod_wi_assim.tif"
-python /nfs/attic/dfh/miniconda/envs/cso/bin/gdal_calc.py -A $fin --outfile=$fout --calc="A*(A>0.01)" --NoDataValue=0 --quiet
-rm "${fin}"
+rm -f $fin
 conda deactivate
 
 echo
@@ -348,52 +329,46 @@ echo "done masking"
 echo
 
 ################################
-#cloud optimized geotiff...
-fin="${smpath}ctl_files/wo_assim/${STAMP}_mask_swed_wo_assim.tif"
-fout="${smpath}ctl_files/wo_assim/${STAMP}_mask_cog_swed_wo_assim.tif"
+#convert to cloud optimized geotiff...then clean up and upload.
+fin="${smpath}ctl_files/wo_assim/SWE/${stamp}_mask.tif"
+fout="${smpath}ctl_files/wo_assim/SWE/${stamp}_swed_wo_assim.tif"
 gdal_translate -q $fin $fout -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=DEFLATE
 rm -f $fin
-fin="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.tif"
-mv $fout $fin
-rm -f $fout
-gsutil cp $fin gs://cso_test_upload/or_domain/swed_wo_assim/
+gsutil cp $fout gs://cso_test_upload/wy_domain/swed_wo_assim/
 #let's move it to /scratch and get it off of depot
-mv $fin "${outpath}${STAMP}_swed_wo_assim.tif"
+mv $fout "${outpath}${stamp}_swed_wo_assim.tif"
 
-fin="${smpath}ctl_files/wi_assim/${STAMP}_mask_swed_wi_assim.tif"
-fout="${smpath}ctl_files/wi_assim/${STAMP}_mask_cog_swed_wi_assim.tif"
+fin="${smpath}ctl_files/wo_assim/HS/${stamp}_mask.tif"
+fout="${smpath}ctl_files/wo_assim/HS/${stamp}_snod_wo_assim.tif"
 gdal_translate -q $fin $fout -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=DEFLATE
 rm -f $fin
-fin="${smpath}ctl_files/wi_assim/${STAMP}_swed_wi_assim.tif"
-mv $fout $fin
-rm -f $fout
-gsutil cp $fin gs://cso_test_upload/or_domain/swed_wi_assim/
+gsutil cp $fout gs://cso_test_upload/wy_domain/snod_wo_assim/
 #let's move it to /scratch and get it off of depot
-mv $fin "${outpath}${STAMP}_swed_wi_assim.tif"
+mv $fout "${outpath}${stamp}_snod_wo_assim.tif"
 
-fin="${smpath}ctl_files/wo_assim/${STAMP}_mask_snod_wo_assim.tif"
-fout="${smpath}ctl_files/wo_assim/${STAMP}_mask_cog_snod_wo_assim.tif"
+fin="${smpath}ctl_files/wi_assim/SWE/${stamp}_mask.tif"
+fout="${smpath}ctl_files/wi_assim/SWE/${stamp}_swed_wi_assim.tif"
 gdal_translate -q $fin $fout -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=DEFLATE
 rm -f $fin
-fin="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.tif"
-mv $fout $fin
-rm -f $fout
-gsutil cp $fin gs://cso_test_upload/or_domain/snod_wo_assim/
+gsutil cp $fout gs://cso_test_upload/wy_domain/swed_wi_assim/
 #let's move it to /scratch and get it off of depot
-mv $fin "${outpath}${STAMP}_snod_wo_assim.tif"
+mv $fout "${outpath}${stamp}_swed_wi_assim.tif"
 
-fin="${smpath}ctl_files/wi_assim/${STAMP}_mask_snod_wi_assim.tif"
-fout="${smpath}ctl_files/wi_assim/${STAMP}_mask_cog_snod_wi_assim.tif"
+fin="${smpath}ctl_files/wi_assim/HS/${stamp}_mask.tif"
+fout="${smpath}ctl_files/wi_assim/HS/${stamp}_snod_wi_assim.tif"
 gdal_translate -q $fin $fout -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=DEFLATE
 rm -f $fin
-fin="${smpath}ctl_files/wi_assim/${STAMP}_snod_wi_assim.tif"
-mv $fout $fin
-rm -f $fout
-gsutil cp $fin gs://cso_test_upload/or_domain/snod_wi_assim/
+gsutil cp $fout gs://cso_test_upload/wy_domain/snod_wi_assim/
 #let's move it to /scratch and get it off of depot
-mv $fin "${outpath}${STAMP}_snod_wi_assim.tif"
+mv $fout "${outpath}${stamp}_snod_wi_assim.tif"
 
-echo
-echo "done uploading to GCS"
-echo
+done
 
+  rm "${outfile1}"
+  rm "${infile1}"
+  rm "${outfile2}"
+  rm "${infile2}"
+  rm "${outfile3}"
+  rm "${infile3}"
+  rm "${outfile4}"
+  rm "${infile4}"

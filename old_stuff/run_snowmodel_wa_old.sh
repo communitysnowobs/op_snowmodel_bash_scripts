@@ -31,23 +31,23 @@ STAMP="${y}_${m}_${d}"
 #run the query for met
 cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/get_met_data
 source /nfs/attic/dfh/miniconda/bin/activate ee
-ipython met_data_or.py
+ipython met_data_wa.py
 conda deactivate
 
 ################################
 #adjust the par file
 cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/update_par_file
-./makeparfile_or.exe
+./makeparfile_wa.exe
 
 ################################
-#kick of snow model run for or domain
-cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/or_snowmodel/
+#kick of snow model run for wa domain
+cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/wa_ne_snowmodel/
 ./snowmodel
 
 ################################
 # tons of file management coming your way...
-smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/or_snowmodel/"
-outpath="/scratch/op_snowmodel_outputs/OR/"
+smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/wa_ne_snowmodel/"
+outpath="/scratch/op_snowmodel_outputs/WA/"
 #convert swe and Hs grads output to .nc
 /scratch/cdo/bin/cdo -f nc import_binary "${smpath}ctl_files/wo_assim/swed.ctl" "${smpath}ctl_files/wo_assim/swed.nc"
 /scratch/cdo/bin/cdo -f nc import_binary "${smpath}ctl_files/wo_assim/snod.ctl" "${smpath}ctl_files/wo_assim/snod.nc"
@@ -135,7 +135,7 @@ ncatted -O -a units,projection_x_coordinate,o,c,kilometers "${outfile2}"
 fi
 
 ################################
-#cool, so our entire water year of SWED is now converted over properly to .nc. 
+#cool, so our entire water year of SWED is now converted over properly to .nc.
 #Let us now extract just the final day and rename it appropriately. First, figure out
 #number of time steps in the file.
 numsteps=$(/scratch/cdo/bin/cdo -ntime "${outfile1}")
@@ -161,19 +161,19 @@ rm "${infile2}"
 #the -a_ullr fixes the weird 'shift' issue we have been having!
 fin="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.nc"
 fout="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.tif"
-gdal_translate -of GTiff -a_srs EPSG:32610 -a_ullr 570350 4955850 652450 4832750 $fin $fout
+gdal_translate -of GTiff -a_srs EPSG:32610 -a_ullr 638925 5421375 741525 5299075 $fin $fout
 #clean up
 rm "${fin}"
 
 fin="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.nc"
 fout="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.tif"
-gdal_translate -of GTiff -a_srs EPSG:32610 -a_ullr 570350 4955850 652450 4832750 $fin $fout
+gdal_translate -of GTiff -a_srs EPSG:32610 -a_ullr 638925 5421375 741525 5299075 $fin $fout
 #clean up
 rm "${fin}"
 
 ################################
 #next, let's set values of zero swe to be 'nodata' values. In this way, when we plot the
-#tif, those cells will be transparent. I tested this in QGIS and they do show up 
+#tif, those cells will be transparent. I tested this in QGIS and they do show up
 #transparent. Need to deactivate conda and then reactivate it, in order to access
 #gdal_calc
 source /nfs/attic/dfh/miniconda/bin/activate cso
@@ -198,7 +198,7 @@ rm -f $fin
 fin="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.tif"
 mv $fout $fin
 rm -f $fout
-gsutil cp $fin gs://cso_test_upload/or_domain/swed_wo_assim/
+gsutil cp $fin gs://cso_test_upload/wa_domain/swed_wo_assim/
 
 #let's move it to /scratch and get it off of depot
 fout="${outpath}${STAMP}_swed_wo_assim.tif"
@@ -211,7 +211,7 @@ rm -f $fin
 fin="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.tif"
 mv $fout $fin
 rm -f $fout
-gsutil cp $fin gs://cso_test_upload/or_domain/snod_wo_assim/
+gsutil cp $fin gs://cso_test_upload/wa_domain/snod_wo_assim/
 
 #let's move it to /scratch and get it off of depot
 fout="${outpath}${STAMP}_snod_wo_assim.tif"
