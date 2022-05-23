@@ -2,7 +2,7 @@
 #this will test out the full operational flow for WA for assim...
 
 #have user set year, month, day of the start of the model run (typically Oct 1 of a given year)
-year=2020
+year=2021
 month=10
 day=01
 
@@ -280,6 +280,12 @@ singleday="${smpath}ctl_files/wi_assim/HS/$stamp.nc"
 fin="${smpath}ctl_files/wo_assim/SWE/$stamp.nc"
 fout="${smpath}ctl_files/wo_assim/SWE/$stamp.tif"
 gdal_translate -q -of GTiff -a_srs EPSG:32613 -a_ullr 278150 4452450 465350 4246850 $fin $fout
+
+#temp addition to keep nc files...22 April 2022. Remove when done
+#let's move it to /scratch and get it off of depot
+cp $fin "${outpath}${stamp}_swed_wo_assim.nc"
+###
+
 rm -f $fin
 
 echo "1st gdal done"
@@ -287,17 +293,39 @@ echo "1st gdal done"
 fin="${smpath}ctl_files/wo_assim/HS/$stamp.nc"
 fout="${smpath}ctl_files/wo_assim/HS/$stamp.tif"
 gdal_translate -q -of GTiff -a_srs EPSG:32613 -a_ullr 278150 4452450 465350 4246850 $fin $fout
+
+#temp addition to keep nc files...22 April 2022. Remove when done
+#let's move it to /scratch and get it off of depot
+cp $fin "${outpath}${stamp}_snod_wo_assim.nc"
+###
+
 rm -f $fin
 
 fin="${smpath}ctl_files/wi_assim/SWE/$stamp.nc"
 fout="${smpath}ctl_files/wi_assim/SWE/$stamp.tif"
 gdal_translate -q -of GTiff -a_srs EPSG:32613 -a_ullr 278150 4452450 465350 4246850 $fin $fout
+
+#temp addition to keep nc files...22 April 2022. Remove when done
+#let's move it to /scratch and get it off of depot
+cp $fin "${outpath}${stamp}_swed_wi_assim.nc"
+###
+
 rm -f $fin
 
 fin="${smpath}ctl_files/wi_assim/HS/$stamp.nc"
 fout="${smpath}ctl_files/wi_assim/HS/$stamp.tif"
 gdal_translate -q -of GTiff -a_srs EPSG:32613 -a_ullr 278150 4452450 465350 4246850 $fin $fout
+
+#temp addition to keep nc files...22 April 2022. Remove when done
+#let's move it to /scratch and get it off of depot
+cp $fin "${outpath}${stamp}_snod_wi_assim.nc"
+###
+
 rm -f $fin
+
+#temp addition...remove when done
+#exit
+###
 
 ################################
 #next, let's set values of zero to be 'nodata' values. In this way, when we plot the

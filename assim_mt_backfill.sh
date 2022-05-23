@@ -1,5 +1,5 @@
 #! /bin/bash
-#this will test out the full operational flow for WA for assim...
+#this will test out the full operational flow for MT for assim...
 
 #have user set year, month, day of the start of the model run (typically Oct 1 of a given year)
 year=2021
@@ -7,27 +7,27 @@ month=10
 day=01
 
 #define main path
-smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/co_s_snowmodel/"
+smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/mt_snowmodel/"
 #define output path on scratch
-outpath="/scratch/op_snowmodel_outputs/CO_S/"
+outpath="/scratch/op_snowmodel_outputs/MT/"
 
 #end of model run
 #d=30
 #m=9
 #y=2021
-
+  
 ################################
 #run the query for met --> adjust this python script to manual dates!
 cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/op_snowmodel_python_scripts
 source /nfs/attic/dfh/miniconda/bin/activate ee
-ipython met_data_backfill_co_s.py
+ipython met_data_backfill_mt.py
 conda deactivate
 
 ################################
 #run assim snowmodel... --> adjust to manual dates.
 cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/op_snowmodel_python_scripts
 source /nfs/attic/dfh/miniconda/bin/activate snowmodelcal
-ipython assim_backfill_co_s.py
+ipython assim_backfill_mt.py
 conda deactivate
 
 echo
@@ -38,9 +38,9 @@ echo
 #time to clean up a bit...delete ssmt and sspr grads files, both in 
 #the wo_assim and the wi_assim folders. We just don't need them. 
 
-smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/co_s_snowmodel/"
+smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/mt_snowmodel/"
 #define output path on scratch
-outpath="/scratch/op_snowmodel_outputs/CO_S/"
+outpath="/scratch/op_snowmodel_outputs/MT/"
 
 rm "${smpath}outputs/wi_assim/ssmt.gdat"
 rm "${smpath}outputs/wi_assim/sspr.gdat"
@@ -279,48 +279,24 @@ singleday="${smpath}ctl_files/wi_assim/HS/$stamp.nc"
 #the -a_ullr fixes the weird 'shift' issue we have been having!
 fin="${smpath}ctl_files/wo_assim/SWE/$stamp.nc"
 fout="${smpath}ctl_files/wo_assim/SWE/$stamp.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32613 -a_ullr 224550 4214650 371550 4129550 $fin $fout
-
-#temp addition to keep nc files...22 April 2022. Remove when done
-#let's move it to /scratch and get it off of depot
-#cp $fin "${outpath}${stamp}_swed_wo_assim.nc"
-###
-
+gdal_translate -q -of GTiff -a_srs EPSG:32612 -a_ullr 446225 5034825 534675 4926325 $fin $fout
 rm -f $fin
 
 echo "1st gdal done"
 
 fin="${smpath}ctl_files/wo_assim/HS/$stamp.nc"
 fout="${smpath}ctl_files/wo_assim/HS/$stamp.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32613 -a_ullr 224550 4214650 371550 4129550 $fin $fout
-
-#temp addition to keep nc files...22 April 2022. Remove when done
-#let's move it to /scratch and get it off of depot
-#cp $fin "${outpath}${stamp}_snod_wo_assim.nc"
-###
-
+gdal_translate -q -of GTiff -a_srs EPSG:32612 -a_ullr 446225 5034825 534675 4926325 $fin $fout
 rm -f $fin
 
 fin="${smpath}ctl_files/wi_assim/SWE/$stamp.nc"
 fout="${smpath}ctl_files/wi_assim/SWE/$stamp.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32613 -a_ullr 224550 4214650 371550 4129550 $fin $fout
-
-#temp addition to keep nc files...22 April 2022. Remove when done
-#let's move it to /scratch and get it off of depot
-#cp $fin "${outpath}${stamp}_swed_wi_assim.nc"
-###
-
+gdal_translate -q -of GTiff -a_srs EPSG:32612 -a_ullr 446225 5034825 534675 4926325 $fin $fout
 rm -f $fin
 
 fin="${smpath}ctl_files/wi_assim/HS/$stamp.nc"
 fout="${smpath}ctl_files/wi_assim/HS/$stamp.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32613 -a_ullr 224550 4214650 371550 4129550 $fin $fout
-
-#temp addition to keep nc files...22 April 2022. Remove when done
-#let's move it to /scratch and get it off of depot
-#cp $fin "${outpath}${stamp}_snod_wi_assim.nc"
-###
-
+gdal_translate -q -of GTiff -a_srs EPSG:32612 -a_ullr 446225 5034825 534675 4926325 $fin $fout
 rm -f $fin
 
 ################################
@@ -360,7 +336,7 @@ fin="${smpath}ctl_files/wo_assim/SWE/${stamp}_mask.tif"
 fout="${smpath}ctl_files/wo_assim/SWE/${stamp}_swed_wo_assim.tif"
 gdal_translate -q $fin $fout -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=DEFLATE
 rm -f $fin
-gsutil cp $fout gs://cso_test_upload/co_s_domain/swed_wo_assim/
+gsutil cp $fout gs://cso_test_upload/mt_domain/swed_wo_assim/
 #let's move it to /scratch and get it off of depot
 mv $fout "${outpath}${stamp}_swed_wo_assim.tif"
 
@@ -368,7 +344,7 @@ fin="${smpath}ctl_files/wo_assim/HS/${stamp}_mask.tif"
 fout="${smpath}ctl_files/wo_assim/HS/${stamp}_snod_wo_assim.tif"
 gdal_translate -q $fin $fout -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=DEFLATE
 rm -f $fin
-gsutil cp $fout gs://cso_test_upload/co_s_domain/snod_wo_assim/
+gsutil cp $fout gs://cso_test_upload/mt_domain/snod_wo_assim/
 #let's move it to /scratch and get it off of depot
 mv $fout "${outpath}${stamp}_snod_wo_assim.tif"
 
@@ -376,7 +352,7 @@ fin="${smpath}ctl_files/wi_assim/SWE/${stamp}_mask.tif"
 fout="${smpath}ctl_files/wi_assim/SWE/${stamp}_swed_wi_assim.tif"
 gdal_translate -q $fin $fout -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=DEFLATE
 rm -f $fin
-gsutil cp $fout gs://cso_test_upload/co_s_domain/swed_wi_assim/
+gsutil cp $fout gs://cso_test_upload/mt_domain/swed_wi_assim/
 #let's move it to /scratch and get it off of depot
 mv $fout "${outpath}${stamp}_swed_wi_assim.tif"
 
@@ -384,7 +360,7 @@ fin="${smpath}ctl_files/wi_assim/HS/${stamp}_mask.tif"
 fout="${smpath}ctl_files/wi_assim/HS/${stamp}_snod_wi_assim.tif"
 gdal_translate -q $fin $fout -co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=DEFLATE
 rm -f $fin
-gsutil cp $fout gs://cso_test_upload/co_s_domain/snod_wi_assim/
+gsutil cp $fout gs://cso_test_upload/mt_domain/snod_wi_assim/
 #let's move it to /scratch and get it off of depot
 mv $fout "${outpath}${stamp}_snod_wi_assim.tif"
 
