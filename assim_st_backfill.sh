@@ -279,22 +279,22 @@ singleday="${smpath}ctl_files/wi_assim/HS/$stamp.nc"
 #the -a_ullr fixes the weird 'shift' issue we have been having!
 fin="${smpath}ctl_files/wo_assim/SWE/$stamp.nc"
 fout="${smpath}ctl_files/wo_assim/SWE/$stamp.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 583475 5045175 619475 5001225 $fin $fout
+gdal_translate -q -of GTiff -a_srs EPSG:32611 -a_ullr 619550 4908850 722650 4806250 $fin $fout
 rm -f $fin
 
 fin="${smpath}ctl_files/wo_assim/HS/$stamp.nc"
 fout="${smpath}ctl_files/wo_assim/HS/$stamp.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 583475 5045175 619475 5001225 $fin $fout
+gdal_translate -q -of GTiff -a_srs EPSG:32611 -a_ullr 619550 4908850 722650 4806250 $fin $fout
 rm -f $fin
 
 fin="${smpath}ctl_files/wi_assim/SWE/$stamp.nc"
 fout="${smpath}ctl_files/wi_assim/SWE/$stamp.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 583475 5045175 619475 5001225 $fin $fout
+gdal_translate -q -of GTiff -a_srs EPSG:32611 -a_ullr 619550 4908850 722650 4806250 $fin $fout
 rm -f $fin
 
 fin="${smpath}ctl_files/wi_assim/HS/$stamp.nc"
 fout="${smpath}ctl_files/wi_assim/HS/$stamp.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 583475 5045175 619475 5001225 $fin $fout
+gdal_translate -q -of GTiff -a_srs EPSG:32611 -a_ullr 619550 4908850 722650 4806250 $fin $fout
 rm -f $fin
 
 ################################

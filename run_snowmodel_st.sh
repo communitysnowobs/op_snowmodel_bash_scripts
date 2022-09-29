@@ -288,25 +288,25 @@ rm "${infile4}"
 #the -a_ullr fixes the weird 'shift' issue we have been having!
 fin="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.nc"
 fout="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 583475 5045175 619475 5001225 $fin $fout
+gdal_translate -q -of GTiff -a_srs EPSG:32611 -a_ullr 619550 4908850 722650 4806250 $fin $fout
 #clean up
 rm "${fin}"
 
 fin="${smpath}ctl_files/wi_assim/${STAMP}_swed_wi_assim.nc"
 fout="${smpath}ctl_files/wi_assim/${STAMP}_swed_wi_assim.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 583475 5045175 619475 5001225 $fin $fout
+gdal_translate -q -of GTiff -a_srs EPSG:32611 -a_ullr 619550 4908850 722650 4806250 $fin $fout
 #clean up
 rm "${fin}"
 
 fin="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.nc"
 fout="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 583475 5045175 619475 5001225 $fin $fout
+gdal_translate -q -of GTiff -a_srs EPSG:32611 -a_ullr 619550 4908850 722650 4806250 $fin $fout
 #clean up
 rm "${fin}"
 
 fin="${smpath}ctl_files/wi_assim/${STAMP}_snod_wi_assim.nc"
 fout="${smpath}ctl_files/wi_assim/${STAMP}_snod_wi_assim.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 583475 5045175 619475 5001225 $fin $fout
+gdal_translate -q -of GTiff -a_srs EPSG:32611 -a_ullr 619550 4908850 722650 4806250 $fin $fout
 #clean up
 rm "${fin}"
 
