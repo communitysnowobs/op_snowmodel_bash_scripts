@@ -2,7 +2,7 @@
 #this will test out the full operational flow for MT for assim...
 
 #have user set year, month, day of the start of the model run (typically Oct 1 of a given year)
-year=2021
+year=2020
 month=10
 day=01
 
