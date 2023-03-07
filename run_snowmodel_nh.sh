@@ -14,7 +14,7 @@ then
 	year=$(($year - 1))
 elif [ $((10#$monthnum)) -eq 10 ]	
 then
-if [ $day -lt 4 ]
+if [ $day -lt 3 ]
 then
     year=$(($year - 1))
 fi
@@ -22,9 +22,9 @@ fi
 
 #also, we are ultimately going to extract just the 'last' time slice, so let's figure
 #out the time stamp for that. Get date string from three days ago
-d=$(date --date="3 days ago" '+%d')
-m=$(date --date="3 days ago" '+%m')
-y=$(date --date="3 days ago" '+%Y')
+d=$(date --date="2 days ago" '+%d')
+m=$(date --date="2 days ago" '+%m')
+y=$(date --date="2 days ago" '+%Y')
 STAMP="${y}_${m}_${d}"
 
 ################################

@@ -1,6 +1,8 @@
 #! /bin/bash
 
-#This script will execute the complete assimilative snowmodel run for the tahoe
+#this is a test file, changing dates to reduce latency.
+
+#This script will execute the complete assimilative snowmodel run for the central OR
 #domain. See inline comments for further explanation. This version of the code does a 
 #complete run from Oct 1 of current water year to today - (3days). Only the last time
 #slice is extracted, saved, and uploaded.
@@ -19,6 +21,7 @@ then
 	year=$(($year - 1))
 elif [ $((10#$monthnum)) -eq 10 ]	
 then
+#change this from 4 to 3 on Feb 2023
 if [ $day -lt 3 ]
 then
     year=$(($year - 1))
@@ -27,6 +30,8 @@ fi
 
 #also, we are ultimately going to extract just the 'last' time slice, so let's figure
 #out the time stamp for that. Get date string from three days ago
+
+# changed from 3 days to 2 days - change on 23 Nov 2022
 d=$(date --date="2 days ago" '+%d')
 m=$(date --date="2 days ago" '+%m')
 y=$(date --date="2 days ago" '+%Y')
@@ -36,14 +41,16 @@ STAMP="${y}_${m}_${d}"
 #run the query for met data
 cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/op_snowmodel_python_scripts
 source /nfs/attic/dfh/miniconda/bin/activate ee
-ipython met_data_ca.py
+#changed name of script on line below from or.py to or2.py
+ipython met_data_or2.py
 conda deactivate
 
 ################################
 #run assim snowmodel...(review that script closely for details, there is a lot going on)
 cd /nfs/depot/cce_u1/hill/dfh/op_snowmodel/op_snowmodel_python_scripts
 source /nfs/attic/dfh/miniconda/bin/activate snowmodelcal
-ipython assim_ca.py
+#changed name of script on line below from or.py to or2.py
+ipython assim_or2.py
 conda deactivate
 
 echo
@@ -54,9 +61,9 @@ echo
 #time to clean up a bit...delete ssmt and sspr grads files, both in 
 #the wo_assim and the wi_assim folders. We just don't need them. 
 
-smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/ca_snowmodel/"
+smpath="/nfs/depot/cce_u1/hill/dfh/op_snowmodel/or_snowmodel/"
 #define output path on scratch
-outpath="/scratch/op_snowmodel_outputs/CA/"
+outpath="/scratch/op_snowmodel_outputs/OR2/"
 
 rm "${smpath}outputs/wi_assim/ssmt.gdat"
 rm "${smpath}outputs/wi_assim/sspr.gdat"
@@ -288,25 +295,25 @@ rm "${infile4}"
 #the -a_ullr fixes the weird 'shift' issue we have been having!
 fin="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.nc"
 fout="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32611 -a_ullr 163725 4401325 271925 4253225 $fin $fout
+gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 570350 4955850 652450 4832750 $fin $fout
 #clean up
 rm "${fin}"
 
 fin="${smpath}ctl_files/wi_assim/${STAMP}_swed_wi_assim.nc"
 fout="${smpath}ctl_files/wi_assim/${STAMP}_swed_wi_assim.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32611 -a_ullr 163725 4401325 271925 4253225 $fin $fout
+gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 570350 4955850 652450 4832750 $fin $fout
 #clean up
 rm "${fin}"
 
 fin="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.nc"
 fout="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32611 -a_ullr 163725 4401325 271925 4253225 $fin $fout
+gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 570350 4955850 652450 4832750 $fin $fout
 #clean up
 rm "${fin}"
 
 fin="${smpath}ctl_files/wi_assim/${STAMP}_snod_wi_assim.nc"
 fout="${smpath}ctl_files/wi_assim/${STAMP}_snod_wi_assim.tif"
-gdal_translate -q -of GTiff -a_srs EPSG:32611 -a_ullr 163725 4401325 271925 4253225 $fin $fout
+gdal_translate -q -of GTiff -a_srs EPSG:32610 -a_ullr 570350 4955850 652450 4832750 $fin $fout
 #clean up
 rm "${fin}"
 
@@ -356,7 +363,7 @@ rm -f $fin
 fin="${smpath}ctl_files/wo_assim/${STAMP}_swed_wo_assim.tif"
 mv $fout $fin
 rm -f $fout
-gsutil cp $fin gs://cso_test_upload/ca_domain/swed_wo_assim/
+gsutil cp $fin gs://cso_test_upload/or2_domain/swed_wo_assim/
 #let's move it to /scratch and get it off of depot
 mv $fin "${outpath}${STAMP}_swed_wo_assim.tif"
 
@@ -367,7 +374,7 @@ rm -f $fin
 fin="${smpath}ctl_files/wi_assim/${STAMP}_swed_wi_assim.tif"
 mv $fout $fin
 rm -f $fout
-gsutil cp $fin gs://cso_test_upload/ca_domain/swed_wi_assim/
+gsutil cp $fin gs://cso_test_upload/or2_domain/swed_wi_assim/
 #let's move it to /scratch and get it off of depot
 mv $fin "${outpath}${STAMP}_swed_wi_assim.tif"
 
@@ -378,7 +385,7 @@ rm -f $fin
 fin="${smpath}ctl_files/wo_assim/${STAMP}_snod_wo_assim.tif"
 mv $fout $fin
 rm -f $fout
-gsutil cp $fin gs://cso_test_upload/ca_domain/snod_wo_assim/
+gsutil cp $fin gs://cso_test_upload/or2_domain/snod_wo_assim/
 #let's move it to /scratch and get it off of depot
 mv $fin "${outpath}${STAMP}_snod_wo_assim.tif"
 
@@ -389,7 +396,7 @@ rm -f $fin
 fin="${smpath}ctl_files/wi_assim/${STAMP}_snod_wi_assim.tif"
 mv $fout $fin
 rm -f $fout
-gsutil cp $fin gs://cso_test_upload/ca_domain/snod_wi_assim/
+gsutil cp $fin gs://cso_test_upload/or2_domain/snod_wi_assim/
 #let's move it to /scratch and get it off of depot
 mv $fin "${outpath}${STAMP}_snod_wi_assim.tif"
 
